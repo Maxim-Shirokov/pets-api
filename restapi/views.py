@@ -4,7 +4,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from .serializers import PetSerializer, PetAddPhotoSerializer
-from .models import Pet, PetPhoto
+from .models import Pet
 
 
 NOT_FOUND_ERROR_MESSAGE = 'Pet with the matching ID was not found.'

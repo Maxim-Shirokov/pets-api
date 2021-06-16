@@ -1,5 +1,4 @@
 from django.db import models
-from pet import settings
 
 
 class Pet(models.Model):

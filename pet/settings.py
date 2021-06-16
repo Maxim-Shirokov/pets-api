@@ -16,6 +16,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
+API_SECRET = os.environ.get('API_SECRET')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DEBUG', 1))
 
@@ -122,6 +124,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S',
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'restapi.authentications.ApiKeyAuthentication',
+    ],
 }
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
