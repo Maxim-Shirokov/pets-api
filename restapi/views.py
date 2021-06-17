@@ -1,6 +1,7 @@
 from distutils.util import strtobool
 
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .serializers import PetSerializer, PetAddPhotoSerializer
@@ -10,7 +11,7 @@ from .models import Pet
 NOT_FOUND_ERROR_MESSAGE = 'Pet with the matching ID was not found.'
 
 
-class PetViewSet(generics.ListAPIView, generics.CreateAPIView, generics.DestroyAPIView):
+class PetView(generics.ListAPIView, generics.CreateAPIView, generics.DestroyAPIView):
     serializer_class = PetSerializer
 
     http_method_names = ['get', 'post', 'delete']
@@ -21,14 +22,10 @@ class PetViewSet(generics.ListAPIView, generics.CreateAPIView, generics.DestroyA
         has_photos = self.request.query_params.get('has_photos')
         has_photos = strtobool(has_photos) if has_photos else None
 
-        if has_photos is None:
-            pets = Pet.objects.prefetch_related('photos')[offset:offset + limit]
-        elif has_photos:
-            pets = Pet.objects.filter(photos__isnull=False).prefetch_related('photos')[offset:offset + limit]
-        else:
-            pets = Pet.objects.exclude(photos__isnull=False)[offset:offset + limit]
+        if limit < 0 or offset < 0:
+            raise ValidationError(detail="'limit' and 'offset' must be non-negative")
 
-        return pets
+        return Pet.get_pets(has_photos=has_photos, offset=offset, limit=limit)
 
     def get(self, request, **kwargs):
         queryset = self.get_queryset()
@@ -42,8 +39,7 @@ class PetViewSet(generics.ListAPIView, generics.CreateAPIView, generics.DestroyA
         errors = []
         for id in ids:
             try:
-                instance = Pet.objects.get(pk=id)
-                instance.delete()
+                Pet.objects.get(pk=id).delete()
                 count_deleted += 1
             except Pet.DoesNotExist:
                 error = {'id': id, 'error': NOT_FOUND_ERROR_MESSAGE}
