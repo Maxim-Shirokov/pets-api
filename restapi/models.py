@@ -15,7 +15,7 @@ class Pet(models.Model):
         if has_photos is None:
             pets = Pet.objects.prefetch_related('photos')[offset:offset + limit]
         elif has_photos:
-            pets = Pet.objects.filter(photos__isnull=False).prefetch_related('photos')[offset:offset + limit]
+            pets = Pet.objects.filter(photos__isnull=False).distinct().prefetch_related('photos')[offset:offset + limit]
         else:
             pets = Pet.objects.exclude(photos__isnull=False)[offset:offset + limit]
         return pets
