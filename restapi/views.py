@@ -1,11 +1,13 @@
 from distutils.util import strtobool
 
 from rest_framework import generics, status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError as restFrameworkValidationError
 from rest_framework.response import Response
 
 from .serializers import PetSerializer, PetAddPhotoSerializer
 from .models import Pet
+
+from django.core.exceptions import ValidationError as djangoValidationError
 
 
 NOT_FOUND_ERROR_MESSAGE = 'Pet with the matching ID was not found.'
@@ -23,7 +25,7 @@ class PetView(generics.ListAPIView, generics.CreateAPIView, generics.DestroyAPIV
         has_photos = strtobool(has_photos) if has_photos else None
 
         if limit < 0 or offset < 0:
-            raise ValidationError(detail="'limit' and 'offset' must be non-negative")
+            raise restFrameworkValidationError(detail="'limit' and 'offset' must be non-negative")
 
         return Pet.get_pets(has_photos=has_photos, offset=offset, limit=limit)
 
@@ -57,6 +59,8 @@ class PetImageCreateView(generics.CreateAPIView):
             pet = Pet.objects.get(id=id)
         except Pet.DoesNotExist:
             return Response(data=NOT_FOUND_ERROR_MESSAGE, status=status.HTTP_400_BAD_REQUEST)
+        except djangoValidationError as error:
+            return Response(data=error, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():

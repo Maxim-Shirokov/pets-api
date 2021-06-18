@@ -1,7 +1,10 @@
+import uuid
+
 from django.db import models
 
 
 class Pet(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(max_length=100)
     age = models.PositiveSmallIntegerField(default=0)
     type = models.CharField(max_length=100)
@@ -19,5 +22,6 @@ class Pet(models.Model):
 
 
 class PetPhoto(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     pet = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='photos')
     photo = models.ImageField(upload_to='')
