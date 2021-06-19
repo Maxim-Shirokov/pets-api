@@ -1,0 +1,12 @@
+.DS_Store
+
+**/*.pyc
+**/*__pycache__
+.cache
+
+media
+
+.idea
+idea
+
+venv
