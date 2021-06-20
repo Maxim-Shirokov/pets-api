@@ -3,7 +3,7 @@ import uuid
 from unittest import mock
 
 from pet import settings
-from django.test import TestCase, Client, override_settings
+from django.test import TestCase, Client, override_settings, RequestFactory
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
@@ -47,11 +47,13 @@ class DefaultSetUp(TestCase):
 
 
 class GetPetsTest(DefaultSetUp):
+    request = RequestFactory()
 
     def test_get_all_pets(self):
-        response = self.client.get('/pets')
+        url = '/pets'
+        response = self.client.get(url)
         pets = Pet.objects.all()
-        serializer = PetSerializer(pets, many=True)
+        serializer = self.get_serializer(pets, url)
         self.assertEqual(response.data['item'], serializer.data)
         self.assertEqual(response.data['count'], pets.count())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -65,35 +67,42 @@ class GetPetsTest(DefaultSetUp):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_with_limit_pets(self):
-        response = self.client.get('/pets?limit=2')
+        url = '/pets?limit=2'
+        response = self.client.get(url)
         pets = Pet.objects.all()[:2]
-        serializer = PetSerializer(pets, many=True)
+        serializer = self.get_serializer(pets, url)
         self.assertEqual(response.data['item'], serializer.data)
         self.assertEqual(response.data['count'], pets.count())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_with_offset_pets(self):
-        response = self.client.get('/pets?offset=1')
+        url = '/pets?offset=1'
+        response = self.client.get(url)
         pets = Pet.objects.all()[1:]
-        serializer = PetSerializer(pets, many=True)
+        serializer = self.get_serializer(pets, url)
         self.assertEqual(response.data['item'], serializer.data)
         self.assertEqual(response.data['count'], pets.count())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_with_has_photo(self):
-        response = self.client.get('/pets?has_photos=True')
+        url = '/pets?has_photos=True'
+        response = self.client.get(url)
         pets = Pet.objects.filter(photos__isnull=False)
-        serializer = PetSerializer(pets, many=True)
+        serializer = self.get_serializer(pets, url)
         self.assertEqual(response.data['item'], serializer.data)
         self.assertEqual(response.data['count'], pets.count())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        response = self.client.get('/pets?has_photos=False')
+        url1 = '/pets?has_photos=False'
+        response = self.client.get(url1)
         pets = Pet.objects.exclude(photos__isnull=False)
-        serializer = PetSerializer(pets, many=True)
+        serializer = self.get_serializer(pets, url1)
         self.assertEqual(response.data['item'], serializer.data)
         self.assertEqual(response.data['count'], pets.count())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def get_serializer(self, pets, url):
+        return PetSerializer(pets, many=True, context={'request': self.request.get(url)})
 
 
 class DeletePetsTest(DefaultSetUp):

@@ -32,7 +32,7 @@ class PetView(generics.ListAPIView, generics.CreateAPIView, generics.DestroyAPIV
     def get(self, request, **kwargs):
         queryset = self.get_queryset()
         count = queryset.count()
-        serializer = self.serializer_class(queryset, many=True)
+        serializer = self.serializer_class(queryset, many=True, context={'request': request})
         return Response({'count': count, 'item': serializer.data})
 
     def delete(self, request, **kwargs):
@@ -62,7 +62,7 @@ class PetImageCreateView(generics.CreateAPIView):
         except djangoValidationError as error:
             return Response(data=error, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save(pet=pet)
             return Response(serializer.data)

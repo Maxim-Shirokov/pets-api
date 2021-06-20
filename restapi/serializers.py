@@ -15,7 +15,11 @@ class PetAddPhotoSerializer(serializers.ModelSerializer):
         return PetPhoto.objects.create(**validated_data)
 
     def get_image_url(self, obj):
-        return obj.photo.url
+        request = self.context.get('request')
+        photo_url = obj.photo.url
+        if request:
+            return request.build_absolute_uri(photo_url)
+        return photo_url
 
 
 class PetSerializer(serializers.ModelSerializer):
